@@ -7,11 +7,13 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.ecociente.cadastro.core.domain.Cooperativa;
 import br.com.ecociente.cadastro.core.domain.Endereco;
 import br.com.ecociente.cadastro.core.domain.Usuario;
+import br.com.ecociente.cadastro.core.exception.AlreadyExistsException;
 import br.com.ecociente.cadastro.core.gateway.CepGateway;
 import br.com.ecociente.cadastro.core.gateway.CooperativaGateway;
 import br.com.ecociente.cadastro.core.gateway.EnderecoGateway;
 import br.com.ecociente.cadastro.core.gateway.UsuarioGateway;
-import br.com.ecociente.cadastro.core.usecase.CadastrarCooperativaUseCase;
+import br.com.ecociente.cadastro.core.usecase.input.CadastrarCooperativaUseCase;
+import br.com.ecociente.cadastro.core.usecase.output.CadastroCooperativaOutput;
 
 @Service 
 public class CadastrarCooperativaService implements CadastrarCooperativaUseCase {
@@ -37,16 +39,16 @@ public class CadastrarCooperativaService implements CadastrarCooperativaUseCase 
 
   @Override
   @Transactional 
-  public Cooperativa executar(String nomeResponsavel, String email, String senha, String nomeCooperativa, String cnpj,
+  public CadastroCooperativaOutput executar(String nomeResponsavel, String email, String senha, String nomeCooperativa, String cnpj,
       String emailCooperativa, String telefone, String cep, String numero, String complemento) {
         String emailLimpo = email.trim().toLowerCase();
         String cnpjLimpo = cnpj.replaceAll("\\D","");
 
     if (usuarioGateway.existePorEmail(emailLimpo)) {
-      throw new BusinessException("EMAIL_ALREADY_EXISTS", "Email já cadastrado");
+      new AlreadyExistsException ("EMAIL_ALREADY_EXISTS", "Email já cadastrado");
     }
-    if (usuarioGateway.existePorCpf(cpfLimpo)) {
-      throw new  BusinessException("CPF_ALREADY_EXISTS", "CPF já cadastrado");
+    if (usuarioGateway.existePorCpf(cnpjLimpo)) {
+      new AlreadyExistsException ("CNPJ_ALREADY_EXISTS", "CPF já cadastrado");
     }
 
     Endereco enderecoCep = cepGateway.buscarEnderecoPorCep(cep);
@@ -67,8 +69,8 @@ public class CadastrarCooperativaService implements CadastrarCooperativaUseCase 
       telefone.replaceAll("\\D",""),null, usuarioSalvo.getIdUsuario(),enderecoSalvo.getIdEndereco()
     );
 
-    return cooperativaGateway.salvar(cooperativa);
-        
+    Cooperativa cooperativaSalva = cooperativaGateway.salvar(cooperativa);
+    return new CadastroCooperativaOutput(usuarioSalvo, cooperativaSalva, enderecoSalvo);   
   }
 
   

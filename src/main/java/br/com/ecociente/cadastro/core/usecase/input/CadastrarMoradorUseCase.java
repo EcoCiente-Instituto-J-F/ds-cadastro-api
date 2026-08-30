@@ -1,11 +1,11 @@
-package br.com.ecociente.cadastro.core.usecase;
+package br.com.ecociente.cadastro.core.usecase.input;
 
 import java.time.LocalDate;
 
-import br.com.ecociente.cadastro.core.domain.Usuario;
+import br.com.ecociente.cadastro.core.usecase.output.CadastroMoradorOutput;
 
 public interface CadastrarMoradorUseCase {
-  Usuario executar(
+  CadastroMoradorOutput executar(
     String nomeCompleto, 
     String email, 
     String senha, 

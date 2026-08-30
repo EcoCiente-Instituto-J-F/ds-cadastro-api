@@ -9,10 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.ecociente.cadastro.core.domain.Endereco;
 import br.com.ecociente.cadastro.core.domain.Usuario;
+import br.com.ecociente.cadastro.core.exception.AlreadyExistsException;
+import br.com.ecociente.cadastro.core.exception.BusinessException;
 import br.com.ecociente.cadastro.core.gateway.CepGateway;
 import br.com.ecociente.cadastro.core.gateway.EnderecoGateway;
 import br.com.ecociente.cadastro.core.gateway.UsuarioGateway;
-import br.com.ecociente.cadastro.core.usecase.CadastroUsuarioComumUseCase;
+import br.com.ecociente.cadastro.core.usecase.input.CadastroUsuarioComumUseCase;
+import br.com.ecociente.cadastro.core.usecase.output.CadastroUsuarioComumOutput;
 
 @Service 
 public class CadastrarUsuarioComumService implements CadastroUsuarioComumUseCase {
@@ -36,7 +39,7 @@ public class CadastrarUsuarioComumService implements CadastroUsuarioComumUseCase
 
   @Override
   @Transactional 
-  public Usuario executar(String nomeCompleto, String email, String senha, LocalDate dataNascimento, String cpf,
+  public CadastroUsuarioComumOutput executar(String nomeCompleto, String email, String senha, LocalDate dataNascimento, String cpf,
       String cep, String numero, String complemento) {
     
     validarDataNascimento(dataNascimento);
@@ -44,10 +47,10 @@ public class CadastrarUsuarioComumService implements CadastroUsuarioComumUseCase
     String cpfLimpo = cpf.replaceAll("\\D","");
 
     if (usuarioGateway.existePorEmail(emaiLimpo)) {
-      throw new BusinessException("EMAIL_ALREADY_EXISTS", "Email já cadastrado");
+      new AlreadyExistsException ("EMAIL_ALREADY_EXISTS", "Email já cadastrado");
     }
     if (usuarioGateway.existePorCpf(cpfLimpo)) {
-      throw new  BusinessException("CPF_ALREADY_EXISTS", "CPF já cadastrado");
+      throw new AlreadyExistsException("CPF_ALREADY_EXISTS", "CPF já cadastrado");
     }
     Endereco enderecoCep = cepGateway.buscarEnderecoPorCep(cep);
     Endereco enderecoSalvo = enderecoGateway.salvar(new Endereco(
@@ -62,15 +65,15 @@ public class CadastrarUsuarioComumService implements CadastroUsuarioComumUseCase
     Usuario usuarioSalvo = usuarioGateway.salvar(usuario);
     usuarioGateway.salvarVinculoUsuarioComum(usuario.getIdUsuario());
     
-    return usuarioSalvo;
+    return new CadastroUsuarioComumOutput(usuarioSalvo, enderecoSalvo);
   }
 
   private void validarDataNascimento(LocalDate data){
     if (data.isAfter(LocalDate.now())) {
-      throw new BusinessException("VALIDATION_ERROR", "Data de nascimento não pode ser futura");
+      new BusinessException("VALIDATION_ERROR", "Data de nascimento não pode ser futura");
     }
     if (Period.between(data, LocalDate.now()).getYears()<18) {
-      throw new BusinessException("EMAIL_ALREADY_EXISTS", "Email já cadastrado");
+      new BusinessException("VALIDATION_ERROR", "Menor de idade");
     }
   }
 

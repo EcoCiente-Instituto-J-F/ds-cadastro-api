@@ -1,10 +1,10 @@
-package br.com.ecociente.cadastro.core.usecase;
+package br.com.ecociente.cadastro.core.usecase.input;
 
 
-import br.com.ecociente.cadastro.core.domain.Cooperativa;
+import br.com.ecociente.cadastro.core.usecase.output.CadastroCooperativaOutput;
 
 public interface CadastrarCooperativaUseCase {
-  Cooperativa executar(
+  CadastroCooperativaOutput executar(
     String nomeResponsavel, 
     String email, 
     String senha, 
