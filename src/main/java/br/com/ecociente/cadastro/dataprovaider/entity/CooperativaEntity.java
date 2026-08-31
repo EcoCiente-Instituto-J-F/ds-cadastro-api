@@ -54,17 +54,24 @@ public class CooperativaEntity {
   private OffsetDateTime dataCadastro = OffsetDateTime.now();
 
   @Column(name = "usuario_id", nullable = false)
-  private Integer userId;
+private Integer userId;
 
-  @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "usuario_id",nullable = false)
-  private UserEntity userEntity;
+@OneToOne(fetch = FetchType.LAZY)
+@JoinColumn(
+    name = "usuario_id",
+    insertable = false,
+    updatable = false
+)
+private UserEntity userEntity;
 
-  @Column(name = "endereco_id", nullable = false)
-  private Integer enderecoId;
+@Column(name = "endereco_id", nullable = false)
+private Integer enderecoId;
 
-  @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "endereco_id",nullable = false)
-  private EnderecoEntity enderecoEntity;
-  
+@OneToOne(fetch = FetchType.LAZY)
+@JoinColumn(
+    name = "endereco_id",
+    insertable = false,
+    updatable = false
+)
+private EnderecoEntity enderecoEntity;
 }

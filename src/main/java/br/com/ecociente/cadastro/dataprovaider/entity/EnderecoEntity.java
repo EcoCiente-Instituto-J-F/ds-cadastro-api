@@ -29,7 +29,7 @@ public class EnderecoEntity {
   @Column(name = "cep", length = 10)
   private String cep;
 
-  @Column(name = "estado", length = 2)
+  @Column(name = "estado", length = 2, columnDefinition = "bpchar(2)")
   private String estado;
 
   @Column(name = "cidade", length = 100)
@@ -43,11 +43,5 @@ public class EnderecoEntity {
 
   @Column(name = "complemento",length = 100)
   private String complemento;
-
-  @Column(name = "latitude", precision = 9, scale = 6)
-  private Double latitude;
-
-  @Column(name = "longitude", precision = 9, scale = 6)
-  private Double longitude;
 
 }

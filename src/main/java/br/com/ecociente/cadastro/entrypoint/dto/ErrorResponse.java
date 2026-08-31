@@ -5,7 +5,7 @@ import java.util.List;
 import lombok.Builder;
 
 @Builder 
-public record ErrrorResponse(
+public record ErrorResponse(
   int status, 
   String codigoError, 
   List<ValidationError> details) {

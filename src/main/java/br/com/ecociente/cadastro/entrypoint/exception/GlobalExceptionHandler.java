@@ -9,15 +9,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.validation.BindException;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import br.com.ecociente.cadastro.core.exception.AlreadyExistsException;
 import br.com.ecociente.cadastro.core.exception.BusinessException;
+import br.com.ecociente.cadastro.core.exception.CepException;
+import br.com.ecociente.cadastro.core.exception.NotFoundException;
+import br.com.ecociente.cadastro.entrypoint.dto.ErrorResponse;
 import br.com.ecociente.cadastro.entrypoint.dto.ValidationError;
 
 
@@ -32,13 +34,13 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(BusinessException.class)
   public ResponseEntity<ErrorResponse> handleBusiness(BusinessException ex) {
-    log.warn("Tipo inválido para o parâmetro {}: {}", ex.getName(), ex.getValue());
+    log.warn("Erro de négicio: {}", ex.getMessage());
     List<ValidationError> details = new ArrayList<>();
-    details.add(new ValidationError(ex.getName(), "Valor inválido para o parâmetro: " + ex.getName() + "'"));
-    var response = createErrorResponse(HttpStatus.BAD_REQUEST, "PARAMETRO_INVALIDO", details);
+    details.add(new ValidationError(null, ex.getMessage()));
+    var response = createErrorResponse(HttpStatus.BAD_REQUEST, ex.getCodigoErro(), details);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
   }
-  
+
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex, WebRequest request) {
     log.warn("Tipo inválido para o parâmetro {}: {}", ex.getName(), ex.getValue());
@@ -75,5 +77,33 @@ public class GlobalExceptionHandler {
     var response = createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "ERRO_INTERNO", details);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
   }
+
+  @ExceptionHandler(AlreadyExistsException.class)
+  public ResponseEntity<ErrorResponse> handleAlreadyExists(AlreadyExistsException ex) {
+    List<ValidationError> details = new ArrayList<>();
+    details.add(new ValidationError(null, ex.getMessage()));
+    var response = createErrorResponse(HttpStatus.NOT_FOUND,ex.getCodigoErro(), details);
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+  }
+
+  @ExceptionHandler(NotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException ex) {
+    List<ValidationError> details = new ArrayList<>();
+    details.add(new ValidationError(null, ex.getMessage()));
+    var response = createErrorResponse(HttpStatus.NOT_FOUND,ex.getCodigoErro(), details);
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+  }
+
+  @ExceptionHandler(CepException.class)
+  public ResponseEntity<ErrorResponse> handleCep(CepException ex) {
+    List<ValidationError> details = new ArrayList<>();
+    details.add(new ValidationError(null, ex.getMessage()));
+    var response = createErrorResponse(HttpStatus.BAD_REQUEST,ex.getCodigoErro(), details);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+  }
+
+
+
+
 
 }

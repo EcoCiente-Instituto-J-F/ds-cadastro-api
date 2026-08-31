@@ -84,7 +84,7 @@ public class CadastroController {
       requestDto.codigoCondominio()
     );
 
-    MoradorCadastroResponseDto response = usuarioMapper.toMoradorCadastroResponse(saida.usuario(),saida.codigoCondominio(),saida.nomeCondominio(),saida.enderecoCOndominio());
+    MoradorCadastroResponseDto response = usuarioMapper.toMoradorCadastroResponse(saida.usuario(),saida.codigoCondominio(),saida.nomeCondominio(),saida.enderecoCondominio());
 
     return ResponseEntity.status(HttpStatus.CREATED).body(response);    
 
@@ -118,19 +118,5 @@ public class CadastroController {
     return ResponseEntity.status(HttpStatus.CREATED).body(response);    
 
   }
-  
-  
-  // @GetMapping("/proxima")
-  // @Operation(
-  //   summary = "Buscar próximo agendamento",
-  //   description = "Endpoint para buscar o próximo agendamento de coleta de acordo com o perfil do usuário autenticado."
-  //                 +"Além disso, é possível filtrar os agendamentos por status, data de início, data de fim e se possui recorrência."
-
-  // )
-  // @ApiResponses({
-  //   @ApiResponse(responseCode = "200", description = "Próximo agendamento retornado com sucesso."),
-  //   @ApiResponse(responseCode = "401", description = "Usuário não autenticado ou token inválido."),
-  //   @ApiResponse(responseCode = "403", description = "Usuário não autorizado")
-  // })
   
 }

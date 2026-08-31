@@ -18,46 +18,46 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity 
-@Immutable 
-@Table (name = "tb_condominios")
-@Getter 
-@Setter 
-@NoArgsConstructor 
-@AllArgsConstructor 
-@Builder 
+@Entity
+@Immutable
+@Table(name = "tb_condominios")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CondominioEntity {
 
-  @Id 
-  @GeneratedValue (strategy = GenerationType.IDENTITY)
-  @Column ( name = "id_condominio")
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "id_condominio")
   private Integer idCondominio;
 
-  @Column (name = "nome_condominio",nullable = false, length = 255)
+  @Column(name = "nome_condominio", nullable = false, length = 255)
   private String nomeCondominio;
 
-  @Column (name = "cnpj", length = 18)
+  @Column(name = "cnpj", length = 18)
   private String cnpj;
 
-  @Column (name = "codigo_acesso", length = 20, unique = true)
+  @Column(name = "codigo_acesso", length = 20, unique = true)
   private String codigoAcesso;
 
-  @Column (name = "ativo", nullable = false)
+  @Column(name = "ativo", nullable = false)
   @Builder.Default
-  private  Boolean ativo = true;
+  private Boolean ativo = true;
 
-  @Column (name = "tipo_condominio_id",nullable = false)
+  @Column(name = "tipo_condominio_id", nullable = false)
   private Integer tipoCondominioId;
 
-  @Column (name = "endereco_id",nullable = false)
+  @Column(name = "endereco_id", nullable = false)
   private Integer enderecoId;
 
-  @OneToOne ( fetch = FetchType.LAZY)
-  @JoinColumn (name = "endereco_id")
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "endereco_id", insertable = false, updatable = false)
   private EnderecoEntity endereco;
 
-  @ManyToOne (fetch = FetchType.LAZY)
-  @JoinColumn ( name = "tipo_condominio_id", insertable = false, updatable = false)
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "tipo_condominio_id", insertable = false, updatable = false)
   private TipoCondominioEntity tipoCondominioEntity;
-  
+
 }

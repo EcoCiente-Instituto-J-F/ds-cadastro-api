@@ -7,7 +7,7 @@ public record CadastroMoradorOutput(
   Usuario usuario,
   String codigoCondominio,
   String nomeCondominio,
-  Endereco enderecoCOndominio
+  Endereco enderecoCondominio
 ) {
   
 }

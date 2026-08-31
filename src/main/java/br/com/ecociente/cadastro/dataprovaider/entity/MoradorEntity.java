@@ -36,22 +36,31 @@ public class MoradorEntity {
   @Id 
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column (name = "id_usuario_condominio")
-  private Integer idUsuario;
+  private Integer idMorador;
 
   @Column(name = "usuario_id", nullable = false)
-  private Integer usuarioId;
+private Integer usuarioId;
 
-  @ManyToOne (fetch = FetchType.LAZY)
-  @JoinColumn (name = "usuario_id",nullable = false)
-  private  UserEntity userEntity;
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(
+    name = "usuario_id",
+    nullable = false,
+    insertable = false,
+    updatable = false
+)
+private UserEntity userEntity;
 
-  @Column(name = "condominio_id", nullable = false)
-  private Integer condominioId;
+@Column(name = "condominio_id", nullable = false)
+private Integer condominioId;
 
-  @ManyToOne (fetch = FetchType.LAZY)
-  @JoinColumn (name = "condominio_id", nullable = false)
-  private  CondominioEntity condominio;
-
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(
+    name = "condominio_id",
+    nullable = false,
+    insertable = false,
+    updatable = false
+)
+private CondominioEntity condominio;
   @Column ( name = "data_entrada", nullable = false)
   @Builder.Default
   private OffsetDateTime dataEntrada = OffsetDateTime.now();
@@ -71,11 +80,11 @@ public class MoradorEntity {
   @Builder.Default
   private Integer nivelConfiancaId = 1;
 
-  @Column (name = "trust_score", nullable = false, precision = 6, scale = 2)
+  @Column (name = "trust_score", nullable = false)
   @Builder.Default
   private BigDecimal trustScore = BigDecimal.ZERO;
 
-  @Column (name = "postagens_validas_sem_contestacao",nullable = false)
+  @Column (name = "postagens_validadas_sem_contestacao",nullable = false)
   @Builder.Default
   private Integer postagensValidasSemContestacao = 0;
 
@@ -87,7 +96,7 @@ public class MoradorEntity {
   @Builder.Default
   private Integer denunciasProcedentes = 0;
 
-  @Column (name = "taxa_acerto_denuncias", precision = 5, scale = 2)
+  @Column (name = "taxa_acerto_denuncias")
   private BigDecimal taxaAcertoDenuncias;  
   
 }

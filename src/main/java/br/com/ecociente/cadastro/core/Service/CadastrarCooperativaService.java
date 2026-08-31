@@ -1,5 +1,7 @@
 package br.com.ecociente.cadastro.core.Service;
 
+import java.time.OffsetDateTime;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,10 +47,10 @@ public class CadastrarCooperativaService implements CadastrarCooperativaUseCase 
         String cnpjLimpo = cnpj.replaceAll("\\D","");
 
     if (usuarioGateway.existePorEmail(emailLimpo)) {
-      new AlreadyExistsException ("EMAIL_ALREADY_EXISTS", "Email já cadastrado");
+      throw new AlreadyExistsException ("EMAIL_ALREADY_EXISTS", "Email já cadastrado");
     }
-    if (usuarioGateway.existePorCpf(cnpjLimpo)) {
-      new AlreadyExistsException ("CNPJ_ALREADY_EXISTS", "CPF já cadastrado");
+    if (cooperativaGateway.existePorCnpj(cnpjLimpo)) {
+      throw new AlreadyExistsException ("CNPJ_ALREADY_EXISTS", "CPF já cadastrado");
     }
 
     Endereco enderecoCep = cepGateway.buscarEnderecoPorCep(cep);
@@ -60,13 +62,13 @@ public class CadastrarCooperativaService implements CadastrarCooperativaUseCase 
     String senhaHash = passwordEncoder.encode(senha);
     Usuario usuario = new Usuario(
       null, nomeResponsavel, emailLimpo, senhaHash, null,null,
-      null,true, null, 6, null
+      null,true, OffsetDateTime.now(), 6, enderecoSalvo.getIdEndereco()
     );
     Usuario usuarioSalvo = usuarioGateway.salvar(usuario);
 
     Cooperativa cooperativa = new Cooperativa(
       null, cnpjLimpo,nomeCooperativa, emailCooperativa.trim().toLowerCase(),
-      telefone.replaceAll("\\D",""),null, usuarioSalvo.getIdUsuario(),enderecoSalvo.getIdEndereco()
+      telefone.replaceAll("\\D",""),OffsetDateTime.now(), usuarioSalvo.getIdUsuario(),enderecoSalvo.getIdEndereco()
     );
 
     Cooperativa cooperativaSalva = cooperativaGateway.salvar(cooperativa);

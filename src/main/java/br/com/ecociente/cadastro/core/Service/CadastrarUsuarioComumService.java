@@ -6,6 +6,7 @@ import java.time.Period;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.OffsetDateTime;
 
 import br.com.ecociente.cadastro.core.domain.Endereco;
 import br.com.ecociente.cadastro.core.domain.Usuario;
@@ -47,7 +48,7 @@ public class CadastrarUsuarioComumService implements CadastroUsuarioComumUseCase
     String cpfLimpo = cpf.replaceAll("\\D","");
 
     if (usuarioGateway.existePorEmail(emaiLimpo)) {
-      new AlreadyExistsException ("EMAIL_ALREADY_EXISTS", "Email já cadastrado");
+      throw new AlreadyExistsException ("EMAIL_ALREADY_EXISTS", "Email já cadastrado");
     }
     if (usuarioGateway.existePorCpf(cpfLimpo)) {
       throw new AlreadyExistsException("CPF_ALREADY_EXISTS", "CPF já cadastrado");
@@ -61,19 +62,18 @@ public class CadastrarUsuarioComumService implements CadastroUsuarioComumUseCase
     String senhaHash = passwordEncoder.encode(senha);
     Usuario usuario = new Usuario(
       null, nomeCompleto, emaiLimpo, senhaHash, dataNascimento, cpfLimpo,
-      null,true,null,1,enderecoSalvo.getIdEndereco());
+      null,true,OffsetDateTime.now(),1,enderecoSalvo.getIdEndereco());
     Usuario usuarioSalvo = usuarioGateway.salvar(usuario);
-    usuarioGateway.salvarVinculoUsuarioComum(usuario.getIdUsuario());
     
     return new CadastroUsuarioComumOutput(usuarioSalvo, enderecoSalvo);
   }
 
   private void validarDataNascimento(LocalDate data){
     if (data.isAfter(LocalDate.now())) {
-      new BusinessException("VALIDATION_ERROR", "Data de nascimento não pode ser futura");
+      throw new BusinessException("VALIDATION_ERROR", "Data de nascimento não pode ser futura");
     }
     if (Period.between(data, LocalDate.now()).getYears()<18) {
-      new BusinessException("VALIDATION_ERROR", "Menor de idade");
+      throw new BusinessException("VALIDATION_ERROR", "Menor de idade");
     }
   }
 
