@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: cadastro-api
+  namespace: ecociente
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: cadastro-api
+
+  template:
+    metadata:
+      labels:
+        app: cadastro-api
+
+    spec:
+      containers:
+        - name: cadastro-api
+
+          image: ecociente/ecociente:cadastro-1.0.0
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 9090
+              protocol: TCP
+
+          envFrom:
+            - configMapRef:
+                name: cadastro-config
+
+            - secretRef:
+                name: cadastro-secret
+
+          readinessProbe:
+            tcpSocket:
+              port: 9090
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 12
+
+          livenessProbe:
+            tcpSocket:
+              port: 9090
+            initialDelaySeconds: 75
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+
+      terminationGracePeriodSeconds: 30
