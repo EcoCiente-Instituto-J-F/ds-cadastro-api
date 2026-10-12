@@ -31,6 +31,8 @@ import br.com.ecociente.cadastro.core.gateway.CooperativaGateway;
 import br.com.ecociente.cadastro.core.gateway.EnderecoGateway;
 import br.com.ecociente.cadastro.core.gateway.UsuarioGateway;
 import br.com.ecociente.cadastro.core.usecase.output.CadastroCooperativaOutput;
+import br.com.ecociente.cadastro.core.gateway.ConsultaDocumentoGateway;
+import static org.mockito.Mockito.inOrder;
 
 @ExtendWith(MockitoExtension.class)
 class CadastrarCooperativaServiceTest {
@@ -49,6 +51,9 @@ class CadastrarCooperativaServiceTest {
 
   @Mock
   private PasswordEncoder passwordEncoder;
+
+  @Mock
+  private ConsultaDocumentoGateway consultaDocumentoGateway;
 
   @InjectMocks
   private CadastrarCooperativaService service;
@@ -104,29 +109,55 @@ class CadastrarCooperativaServiceTest {
   @DisplayName("executar - Cadastro de cooperativa")
   class Executar {
 
-    @Test
-    @DisplayName("Deve cadastrar cooperativa com sucesso quando dados válidos")
-    void shouldCadastrarCooperativaComSucesso() {
-      when(usuarioGateway.existePorEmail(anyString())).thenReturn(false);
-      when(cooperativaGateway.existePorCnpj(anyString())).thenReturn(false);
-      when(cepGateway.buscarEnderecoPorCep(anyString())).thenReturn(enderecoCep);
-      when(enderecoGateway.salvar(any(Endereco.class))).thenReturn(enderecoSalvo);
-      when(passwordEncoder.encode(anyString())).thenReturn("hash");
-      when(usuarioGateway.salvar(any(Usuario.class))).thenReturn(usuarioSalvo);
-      when(cooperativaGateway.salvar(any(Cooperativa.class))).thenReturn(cooperativaSalva);
+  @Test
+@DisplayName("Deve cadastrar cooperativa após validar o CNPJ")
+void shouldCadastrarCooperativaComSucesso() {
+    when(usuarioGateway.existePorEmail(anyString())).thenReturn(false);
+    when(cooperativaGateway.existePorCnpj(anyString())).thenReturn(false);
+    when(cepGateway.buscarEnderecoPorCep(anyString())).thenReturn(enderecoCep);
+    when(enderecoGateway.salvar(any(Endereco.class))).thenReturn(enderecoSalvo);
+    when(passwordEncoder.encode(anyString())).thenReturn("hash");
+    when(usuarioGateway.salvar(any(Usuario.class))).thenReturn(usuarioSalvo);
+    when(cooperativaGateway.salvar(any(Cooperativa.class)))
+        .thenReturn(cooperativaSalva);
 
-      CadastroCooperativaOutput resultado = service.executar(
-          "Emanuelly Mendes", "emanuelly@gmail.com", "Senha@T3ste",
-          "EcoCoop", "54934758000126", "ecocoop@gmail.com",
-          "11953762717", "05280130", "41", "Apto 01");
+    CadastroCooperativaOutput resultado = service.executar(
+        "Emanuelly Mendes",
+        "emanuelly@gmail.com",
+        "Senha@T3ste",
+        "EcoCoop",
+        "54934758000126",
+        "ecocoop@gmail.com",
+        "11953762717",
+        "05280130",
+        "41",
+        "Apto 01"
+    );
 
-      assertNotNull(resultado);
-      assertEquals(10, resultado.usuario().getIdUsuario());
-      assertEquals(20, resultado.cooperativa().getIdCoop());
-      assertEquals("EcoCoop", resultado.cooperativa().getNomeCoop());
-      verify(usuarioGateway).salvar(any(Usuario.class));
-      verify(cooperativaGateway).salvar(any(Cooperativa.class));
-    }
+    assertNotNull(resultado);
+    assertEquals(10, resultado.usuario().getIdUsuario());
+    assertEquals(20, resultado.cooperativa().getIdCoop());
+    assertEquals("EcoCoop", resultado.cooperativa().getNomeCoop());
+
+    var ordem = inOrder(
+        consultaDocumentoGateway,
+        enderecoGateway,
+        usuarioGateway,
+        cooperativaGateway
+    );
+
+    ordem.verify(consultaDocumentoGateway)
+        .validarCnpj("54934758000126");
+
+    ordem.verify(enderecoGateway)
+        .salvar(any(Endereco.class));
+
+    ordem.verify(usuarioGateway)
+        .salvar(any(Usuario.class));
+
+    ordem.verify(cooperativaGateway)
+        .salvar(any(Cooperativa.class));
+}
 
     @Test
     @DisplayName("Deve lançar AlreadyExistsException quando email já cadastrado")

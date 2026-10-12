@@ -72,8 +72,8 @@ public class CadastrarUsuarioComumService implements CadastroUsuarioComumUseCase
     if (data.isAfter(LocalDate.now())) {
       throw new BusinessException("VALIDATION_ERROR", "Data de nascimento não pode ser futura");
     }
-    if (Period.between(data, LocalDate.now()).getYears()<18) {
-      throw new BusinessException("VALIDATION_ERROR", "Menor de idade");
+    if (Period.between(data, LocalDate.now()).getYears()<10) {
+      throw new BusinessException("VALIDATION_ERROR", "Idade mínima para cadastro é de 10 anos");
     }
   }
 

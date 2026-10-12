@@ -18,12 +18,15 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import br.com.ecociente.cadastro.core.exception.AlreadyExistsException;
+import br.com.ecociente.cadastro.core.exception.AtualizacaoNaoPermitidaException;
 import br.com.ecociente.cadastro.core.exception.BusinessException;
 import br.com.ecociente.cadastro.core.exception.CepException;
 import br.com.ecociente.cadastro.core.exception.NotFoundException;
 import br.com.ecociente.cadastro.entrypoint.dto.ErrorResponse;
+import br.com.ecociente.cadastro.entrypoint.dto.ValidationError;
 
 class GlobalExceptionHandlerTest {
 
@@ -95,8 +98,7 @@ class GlobalExceptionHandlerTest {
     BindingResult bindingResult = mock(BindingResult.class);
     when(bindingResult.getFieldErrors()).thenReturn(List.of(
         new FieldError("request", "email", "Email é obrigatório"),
-        new FieldError("request", "senha", "Senha é obrigatória")
-    ));
+        new FieldError("request", "senha", "Senha é obrigatória")));
 
     MethodArgumentNotValidException ex = new MethodArgumentNotValidException(parameter, bindingResult);
     ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleValidationException(ex, null);
@@ -112,7 +114,8 @@ class GlobalExceptionHandlerTest {
   @Test
   @DisplayName("Deve retornar 400 quando HttpMessageNotReadableException")
   void shouldReturn400WhenHttpMessageNotReadableException() {
-    HttpMessageNotReadableException ex = new HttpMessageNotReadableException("JSON malformado", (org.springframework.http.HttpInputMessage) null);
+    HttpMessageNotReadableException ex = new HttpMessageNotReadableException("JSON malformado",
+        (org.springframework.http.HttpInputMessage) null);
 
     ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleHttpMessageNotReadableException(ex, null);
 
@@ -148,5 +151,6 @@ class GlobalExceptionHandlerTest {
     assertEquals("Erro interno do servidor", mensagem);
   }
 
-  private void dummyMethod(String param) {}
+  private void dummyMethod(String param) {
+  }
 }
