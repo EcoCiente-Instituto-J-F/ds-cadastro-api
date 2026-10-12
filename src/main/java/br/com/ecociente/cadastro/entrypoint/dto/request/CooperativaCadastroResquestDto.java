@@ -32,7 +32,10 @@ public record CooperativaCadastroResquestDto(
 
   @Schema(example = "54934758000126")
   @NotBlank(message = "CNPJ é obrigatório")
-  @Pattern(regexp = "^\\d{14}$", message = "CNPJ deve conter 14 dígitos")
+   @Pattern(
+    regexp = "(?i)^(?:[a-z0-9]{12}[0-9]{2}|[a-z0-9]{2}\\.[a-z0-9]{3}\\.[a-z0-9]{3}/[a-z0-9]{4}-[0-9]{2})$",
+    message = "CNPJ deve conter 14 caracteres, com ou sem pontuação"
+  )
   String cnpj,
 
   @Schema(example = "ecoCoop@gmail.com")

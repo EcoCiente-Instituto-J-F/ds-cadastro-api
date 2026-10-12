@@ -16,7 +16,8 @@ import br.com.ecociente.cadastro.core.gateway.EnderecoGateway;
 import br.com.ecociente.cadastro.core.gateway.UsuarioGateway;
 import br.com.ecociente.cadastro.core.usecase.input.CadastrarCooperativaUseCase;
 import br.com.ecociente.cadastro.core.usecase.output.CadastroCooperativaOutput;
-
+import br.com.ecociente.cadastro.core.domain.Cnpj;
+import br.com.ecociente.cadastro.core.gateway.ConsultaDocumentoGateway;
 @Service 
 public class CadastrarCooperativaService implements CadastrarCooperativaUseCase {
   private final UsuarioGateway usuarioGateway;
@@ -24,19 +25,22 @@ public class CadastrarCooperativaService implements CadastrarCooperativaUseCase 
   private final EnderecoGateway enderecoGateway;
   private final CepGateway cepGateway;
   private final PasswordEncoder passwordEncoder;
+  private final ConsultaDocumentoGateway consultaDocumentoGateway;
 
   public CadastrarCooperativaService(
     UsuarioGateway usuarioGateway,
     CooperativaGateway cooperativaGateway,
     EnderecoGateway enderecoGateway,
     CepGateway cepGateway,
-    PasswordEncoder passwordEncoder
+    PasswordEncoder passwordEncoder,
+    ConsultaDocumentoGateway consultaDocumentoGateway
   ){
     this.usuarioGateway = usuarioGateway;
     this.cooperativaGateway = cooperativaGateway;
     this.enderecoGateway = enderecoGateway;
     this.cepGateway = cepGateway;
     this.passwordEncoder = passwordEncoder;
+    this.consultaDocumentoGateway = consultaDocumentoGateway;
   }
 
   @Override
@@ -44,7 +48,7 @@ public class CadastrarCooperativaService implements CadastrarCooperativaUseCase 
   public CadastroCooperativaOutput executar(String nomeResponsavel, String email, String senha, String nomeCooperativa, String cnpj,
       String emailCooperativa, String telefone, String cep, String numero, String complemento) {
         String emailLimpo = email.trim().toLowerCase();
-        String cnpjLimpo = cnpj.replaceAll("\\D","");
+        String cnpjLimpo = Cnpj.normalizarEValidar(cnpj);
 
     if (usuarioGateway.existePorEmail(emailLimpo)) {
       throw new AlreadyExistsException ("EMAIL_ALREADY_EXISTS", "Email já cadastrado");
@@ -52,6 +56,7 @@ public class CadastrarCooperativaService implements CadastrarCooperativaUseCase 
     if (cooperativaGateway.existePorCnpj(cnpjLimpo)) {
       throw new AlreadyExistsException ("CNPJ_ALREADY_EXISTS", "CPF já cadastrado");
     }
+    consultaDocumentoGateway.validarCnpj(cnpjLimpo);
 
     Endereco enderecoCep = cepGateway.buscarEnderecoPorCep(cep);
     Endereco enderecoSalvo = enderecoGateway.salvar(new Endereco(

@@ -1,6 +1,5 @@
 package br.com.ecociente.cadastro.entrypoint.exception;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,12 +15,13 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import br.com.ecociente.cadastro.core.exception.AlreadyExistsException;
+import br.com.ecociente.cadastro.core.exception.AtualizacaoNaoPermitidaException;
 import br.com.ecociente.cadastro.core.exception.BusinessException;
 import br.com.ecociente.cadastro.core.exception.CepException;
 import br.com.ecociente.cadastro.core.exception.NotFoundException;
 import br.com.ecociente.cadastro.entrypoint.dto.ErrorResponse;
 import br.com.ecociente.cadastro.entrypoint.dto.ValidationError;
-
+import br.com.ecociente.cadastro.core.exception.ConsultaDocumentoIndisponivelException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -51,7 +51,8 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex, WebRequest request) {
+  public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex,
+      WebRequest request) {
     log.warn("Falha de validação: {}", ex.getMessage());
     List<ValidationError> details = ex.getBindingResult().getFieldErrors().stream()
         .map(error -> new ValidationError(error.getField(), error.getDefaultMessage()))
@@ -61,7 +62,8 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(HttpMessageNotReadableException.class)
-  public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex, WebRequest request) {
+  public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex,
+      WebRequest request) {
     log.warn("JSON malformado: {}", ex.getMessage());
     List<ValidationError> details = new ArrayList<>();
     details.add(new ValidationError("body", "JSON malformado ou impossível de ler"));
@@ -82,7 +84,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleAlreadyExists(AlreadyExistsException ex) {
     List<ValidationError> details = new ArrayList<>();
     details.add(new ValidationError(null, ex.getMessage()));
-    var response = createErrorResponse(HttpStatus.NOT_FOUND,ex.getCodigoErro(), details);
+    var response = createErrorResponse(HttpStatus.NOT_FOUND, ex.getCodigoErro(), details);
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
   }
 
@@ -90,7 +92,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException ex) {
     List<ValidationError> details = new ArrayList<>();
     details.add(new ValidationError(null, ex.getMessage()));
-    var response = createErrorResponse(HttpStatus.NOT_FOUND,ex.getCodigoErro(), details);
+    var response = createErrorResponse(HttpStatus.NOT_FOUND, ex.getCodigoErro(), details);
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
   }
 
@@ -98,12 +100,37 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleCep(CepException ex) {
     List<ValidationError> details = new ArrayList<>();
     details.add(new ValidationError(null, ex.getMessage()));
-    var response = createErrorResponse(HttpStatus.BAD_REQUEST,ex.getCodigoErro(), details);
+    var response = createErrorResponse(HttpStatus.BAD_REQUEST, ex.getCodigoErro(), details);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
   }
 
+  @ExceptionHandler(ConsultaDocumentoIndisponivelException.class)
+  public ResponseEntity<ErrorResponse> handleConsultaDocumento(
+      ConsultaDocumentoIndisponivelException ex) {
+    List<ValidationError> details = List.of(
+        new ValidationError(
+            "documento",
+            ex.getMessage()));
 
+    return ResponseEntity
+        .status(HttpStatus.SERVICE_UNAVAILABLE)
+        .body(
+            createErrorResponse(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                ex.getCodigoErro(),
+                details));
+  }
 
+  @ExceptionHandler(AtualizacaoNaoPermitidaException.class)
+  public ResponseEntity<ErrorResponse> handleAtualizacaoNaoPermitida(
+      AtualizacaoNaoPermitidaException ex) {
+    var details = List.of(
+        new ValidationError(null, ex.getMessage()));
 
-
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+        createErrorResponse(
+            HttpStatus.FORBIDDEN,
+            ex.getCodigoErro(),
+            details));
+  }
 }
