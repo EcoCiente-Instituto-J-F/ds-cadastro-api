@@ -36,7 +36,9 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(
                 "/api/usuarios/**",
-                "/api/condominios/**")
+                "/api/condominios/**",
+                "/api/coletas",
+                "/api/coletas/**")
             .authenticated()
             .anyRequest().permitAll())
         .exceptionHandling(errors -> errors
