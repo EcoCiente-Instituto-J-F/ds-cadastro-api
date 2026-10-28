@@ -33,6 +33,7 @@ import br.com.ecociente.cadastro.core.usecase.input.CadastroUsuarioComumUseCase;
 import br.com.ecociente.cadastro.core.usecase.output.CadastroCooperativaOutput;
 import br.com.ecociente.cadastro.core.usecase.output.CadastroMoradorOutput;
 import br.com.ecociente.cadastro.core.usecase.output.CadastroUsuarioComumOutput;
+import br.com.ecociente.cadastro.config.security.JwtService;
 import br.com.ecociente.cadastro.entrypoint.exception.GlobalExceptionHandler;
 import br.com.ecociente.cadastro.entrypoint.mapper.UsuarioMapper;
 
@@ -46,6 +47,10 @@ class CadastroControllerTest {
 
   @Autowired
   private MockMvc mockMvc;
+
+  // O filtro de JWT da SecurityConfig precisa de um JwtService; as rotas de cadastro são públicas.
+  @MockitoBean
+  private JwtService jwtService;
 
   @MockitoBean
   private CadastroUsuarioComumUseCase cadastroUsuarioComumUseCase;
