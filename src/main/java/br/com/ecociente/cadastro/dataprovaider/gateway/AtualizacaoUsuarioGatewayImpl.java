@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import br.com.ecociente.cadastro.core.domain.AtualizacaoCondominio;
 import br.com.ecociente.cadastro.core.domain.AtualizacaoDados;
 import br.com.ecociente.cadastro.core.domain.Endereco;
 import br.com.ecociente.cadastro.core.domain.UsuarioEdicao;
@@ -242,6 +243,63 @@ public class AtualizacaoUsuarioGatewayImpl
             endereco.getNumero(),
             endereco.getComplemento(),
             endereco.getIdEndereco()
+        );
+    }
+
+    @Override
+    public boolean condominioAtivoDoSindico(
+        Integer usuarioId,
+        Integer condominioId
+    ) {
+        return !jdbc.query(
+            """
+            SELECT c.id_condominio
+              FROM tb_condominios c
+              JOIN tb_sindicos s
+                ON s.id_sindico = c.sindico_id
+             WHERE c.id_condominio = ?
+               AND s.usuario_id = ?
+               AND c.ativo = TRUE
+             FOR UPDATE OF c
+            """,
+            (rs, row) -> rs.getInt("id_condominio"),
+            condominioId,
+            usuarioId
+        ).isEmpty();
+    }
+
+    @Override
+    public boolean tipoCondominioExiste(Integer tipoCondominioId) {
+        return Boolean.TRUE.equals(jdbc.queryForObject(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                  FROM tb_lkp_tipos_condominios
+                 WHERE id_tipo_condominio = ?
+            )
+            """,
+            Boolean.class,
+            tipoCondominioId
+        ));
+    }
+
+    @Override
+    public void atualizarCondominio(
+        Integer condominioId,
+        AtualizacaoCondominio dados
+    ) {
+        jdbc.update(
+            """
+            UPDATE tb_condominios
+               SET nome_condominio = COALESCE(?, nome_condominio),
+                   tipo_condominio_id = COALESCE(?, tipo_condominio_id),
+                   url_foto = COALESCE(?, url_foto)
+             WHERE id_condominio = ?
+            """,
+            dados.nome(),
+            dados.tipoCondominioId(),
+            dados.urlFoto(),
+            condominioId
         );
     }
 }

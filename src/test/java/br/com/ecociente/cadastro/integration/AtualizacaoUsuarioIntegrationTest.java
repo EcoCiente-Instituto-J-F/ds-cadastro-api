@@ -82,6 +82,7 @@ class AtualizacaoUsuarioIntegrationTest {
 
   private static final String DADOS = "/api/usuarios/me";
   private static final String ENDERECO = "/api/usuarios/me/endereco";
+  private static final String CONDOMINIO = "/api/condominios/100";
 
   private static final String ENDERECO_JSON = """
       {
@@ -608,6 +609,151 @@ class AtualizacaoUsuarioIntegrationTest {
         inteiro("SELECT endereco_id FROM tb_usuarios WHERE id_usuario = 4"));
 
     enderecoPreservado(6);
+  }
+
+  @Test
+  void deveAtualizarNomeTipoEFotoDoCondominio() throws Exception {
+    mvc.perform(requisicao(
+        CONDOMINIO,
+        3,
+        """
+        {
+            "nome": "  Residencial Eco Vida  ",
+            "tipoCondominioId": 2,
+            "urlFoto": "https://res.cloudinary.com/demo/condominio.jpg"
+        }
+        """)).andExpect(status().isNoContent());
+
+    assertEquals(
+        "Residencial Eco Vida",
+        texto("SELECT nome_condominio FROM tb_condominios WHERE id_condominio = 100"));
+
+    assertEquals(
+        2,
+        inteiro("SELECT tipo_condominio_id FROM tb_condominios WHERE id_condominio = 100"));
+
+    assertEquals(
+        "https://res.cloudinary.com/demo/condominio.jpg",
+        texto("SELECT url_foto FROM tb_condominios WHERE id_condominio = 100"));
+  }
+
+  @Test
+  void deveAtualizarSoONomeSemApagarTipoNemFoto() throws Exception {
+    mvc.perform(requisicao(CONDOMINIO, 3, "{\"nome\": \"So o nome\"}"))
+        .andExpect(status().isNoContent());
+
+    assertEquals(
+        "So o nome",
+        texto("SELECT nome_condominio FROM tb_condominios WHERE id_condominio = 100"));
+
+    assertEquals(
+        1,
+        inteiro("SELECT tipo_condominio_id FROM tb_condominios WHERE id_condominio = 100"));
+
+    assertEquals(
+        "https://exemplo.com/foto-um.jpg",
+        texto("SELECT url_foto FROM tb_condominios WHERE id_condominio = 100"));
+  }
+
+  @Test
+  void naoDeveAlterarOutroCondominioAoAtualizarOProprio() throws Exception {
+    mvc.perform(requisicao(CONDOMINIO, 3, "{\"nome\": \"Alterado\"}"))
+        .andExpect(status().isNoContent());
+
+    assertEquals(
+        "Condomínio Dois",
+        texto("SELECT nome_condominio FROM tb_condominios WHERE id_condominio = 101"));
+  }
+
+  @Test
+  void deveBloquearSindicoDeOutroCondominioNaAtualizacaoDeDados() throws Exception {
+    mvc.perform(requisicao("/api/condominios/101", 3, "{\"nome\": \"Invasao\"}"))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.codigoError").value("UPDATE_NOT_ALLOWED"));
+
+    assertEquals(
+        "Condomínio Dois",
+        texto("SELECT nome_condominio FROM tb_condominios WHERE id_condominio = 101"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = { 1, 4, 5 })
+  void deveBloquearNaoSindicoNaAtualizacaoDeDadosDoCondominio(int usuarioId)
+      throws Exception {
+
+    mvc.perform(requisicao(CONDOMINIO, usuarioId, "{\"nome\": \"Invasao\"}"))
+        .andExpect(status().isForbidden());
+
+    assertEquals(
+        "Condomínio Um",
+        texto("SELECT nome_condominio FROM tb_condominios WHERE id_condominio = 100"));
+  }
+
+  @Test
+  void deveBloquearAtualizacaoDeCondominioInativo() throws Exception {
+    jdbc.update(
+        "UPDATE tb_condominios SET ativo = FALSE WHERE id_condominio = 100");
+
+    mvc.perform(requisicao(CONDOMINIO, 3, "{\"nome\": \"Novo\"}"))
+        .andExpect(status().isForbidden());
+
+    assertEquals(
+        "Condomínio Um",
+        texto("SELECT nome_condominio FROM tb_condominios WHERE id_condominio = 100"));
+  }
+
+  @Test
+  void deveRejeitarAtualizacaoDeCondominioSemNenhumCampo() throws Exception {
+    mvc.perform(requisicao(CONDOMINIO, 3, "{}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.codigoError").value("EMPTY_UPDATE"));
+  }
+
+  @Test
+  void deveRejeitarTipoDeCondominioInexistente() throws Exception {
+    mvc.perform(requisicao(CONDOMINIO, 3, "{\"tipoCondominioId\": 99}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.codigoError").value("CONDOMINIUM_TYPE_NOT_FOUND"));
+
+    assertEquals(
+        1,
+        inteiro("SELECT tipo_condominio_id FROM tb_condominios WHERE id_condominio = 100"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+      "{\"nome\": \"   \"}",
+      "{\"nome\": \"\"}",
+      "{\"tipoCondominioId\": 0}",
+      "{\"urlFoto\": \"ftp://exemplo.com/foto.jpg\"}",
+      "{\"urlFoto\": \"sem protocolo\"}"
+  })
+  void deveRejeitarCamposInvalidosNoCondominio(String corpo) throws Exception {
+    mvc.perform(requisicao(CONDOMINIO, 3, corpo))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.codigoError").value("ERRO_VALIDACAO"));
+
+    assertEquals(
+        "Condomínio Um",
+        texto("SELECT nome_condominio FROM tb_condominios WHERE id_condominio = 100"));
+  }
+
+  @Test
+  void deveRejeitarUrlDeFotoComMaisDe500Caracteres() throws Exception {
+    String urlLonga = "https://exemplo.com/" + "a".repeat(500);
+
+    mvc.perform(requisicao(CONDOMINIO, 3, "{\"urlFoto\": \"" + urlLonga + "\"}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.codigoError").value("ERRO_VALIDACAO"));
+  }
+
+  @Test
+  void deveRejeitarIdDeCondominioQueNaoEInteiroNaAtualizacaoDeDados()
+      throws Exception {
+
+    mvc.perform(requisicao("/api/condominios/abc", 3, "{\"nome\": \"Novo\"}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.codigoError").value("PARAMETRO_INVALIDO"));
   }
 
   @Test

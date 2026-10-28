@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.ecociente.cadastro.core.Service.AtualizarUsuarioService;
+import br.com.ecociente.cadastro.entrypoint.dto.request.AtualizarCondominioRequestDto;
 import br.com.ecociente.cadastro.entrypoint.dto.request.AtualizarEnderecoRequestDto;
 import br.com.ecociente.cadastro.entrypoint.dto.request.AtualizarUsuarioRequestDto;
 import br.com.ecociente.cadastro.entrypoint.mapper.AtualizacaoUsuarioMapper;
@@ -63,6 +64,21 @@ public class AtualizacaoUsuarioController {
             request.cep(),
             request.numero(),
             request.complemento()
+        );
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/api/condominios/{id}")
+    public ResponseEntity<Void> atualizarCondominio(
+        Authentication authentication,
+        @PathVariable("id") Integer condominioId,
+        @Valid @RequestBody AtualizarCondominioRequestDto request
+    ) {
+        service.atualizarCondominio(
+            usuarioId(authentication),
+            condominioId,
+            mapper.toDomain(request)
         );
 
         return ResponseEntity.noContent().build();
