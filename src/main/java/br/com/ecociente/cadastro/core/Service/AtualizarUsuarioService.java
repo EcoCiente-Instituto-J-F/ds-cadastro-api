@@ -9,6 +9,7 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.ecociente.cadastro.core.domain.AtualizacaoCondominio;
 import br.com.ecociente.cadastro.core.domain.AtualizacaoDados;
 import br.com.ecociente.cadastro.core.domain.Endereco;
 import br.com.ecociente.cadastro.core.domain.UsuarioEdicao;
@@ -144,6 +145,47 @@ public class AtualizarUsuarioService {
             "Você não é responsável por este condomínio ou ele não possui endereço válido"));
 
     salvarEndereco(enderecoId, cep, numero, complemento);
+  }
+
+  @Transactional
+  public void atualizarCondominio(
+      Integer usuarioId,
+      Integer condominioId,
+      AtualizacaoCondominio entrada) {
+    UsuarioEdicao usuario = buscarUsuario(usuarioId);
+    String tipo = normalizarTipo(usuario.tipo());
+
+    if (!tipo.contains("sindico")) {
+      throw proibido(
+          "Somente o síndico responsável pode alterar o condomínio");
+    }
+
+    if (!gateway.condominioAtivoDoSindico(usuarioId, condominioId)) {
+      throw proibido(
+          "Você não é responsável por este condomínio ou ele está inativo");
+    }
+
+    if (entrada.nome() == null
+        && entrada.tipoCondominioId() == null
+        && entrada.urlFoto() == null) {
+      throw new BusinessException(
+          "EMPTY_UPDATE",
+          "Informe pelo menos um campo para alterar");
+    }
+
+    if (entrada.tipoCondominioId() != null
+        && !gateway.tipoCondominioExiste(entrada.tipoCondominioId())) {
+      throw new BusinessException(
+          "CONDOMINIUM_TYPE_NOT_FOUND",
+          "Tipo de condomínio não encontrado");
+    }
+
+    gateway.atualizarCondominio(
+        condominioId,
+        new AtualizacaoCondominio(
+            entrada.nome() == null ? null : entrada.nome().trim(),
+            entrada.tipoCondominioId(),
+            entrada.urlFoto()));
   }
 
   private UsuarioEdicao buscarUsuario(Integer usuarioId) {

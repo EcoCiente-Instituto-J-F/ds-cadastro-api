@@ -38,6 +38,7 @@ A senha é armazenada como hash BCrypt. O código segue arquitetura hexagonal (`
 | PATCH | `/api/usuarios/me` | JWT | Atualiza dados do usuário autenticado |
 | PATCH | `/api/usuarios/me/endereco` | JWT | Atualiza o endereço do usuário autenticado |
 | PATCH | `/api/condominios/{id}/endereco` | JWT | Atualiza o endereço de um condomínio |
+| PATCH | `/api/condominios/{id}` | JWT | Atualiza nome, tipo e foto (`urlFoto`) do condomínio; só o síndico responsável |
 
 O JWT é validado com o segredo `JWT_SECRET` e deve conter o claim `usuarioId` e expiração. Envie-o no header `Authorization: Bearer <token>`.
 

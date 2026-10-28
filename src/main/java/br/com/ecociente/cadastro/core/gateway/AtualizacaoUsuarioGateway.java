@@ -3,6 +3,7 @@ package br.com.ecociente.cadastro.core.gateway;
 import java.util.List;
 import java.util.Optional;
 
+import br.com.ecociente.cadastro.core.domain.AtualizacaoCondominio;
 import br.com.ecociente.cadastro.core.domain.AtualizacaoDados;
 import br.com.ecociente.cadastro.core.domain.Endereco;
 import br.com.ecociente.cadastro.core.domain.UsuarioEdicao;
@@ -44,4 +45,16 @@ public interface AtualizacaoUsuarioGateway {
     );
 
     void atualizarEndereco(Endereco endereco);
+
+    boolean condominioAtivoDoSindico(
+        Integer usuarioId,
+        Integer condominioId
+    );
+
+    boolean tipoCondominioExiste(Integer tipoCondominioId);
+
+    void atualizarCondominio(
+        Integer condominioId,
+        AtualizacaoCondominio dados
+    );
 }

@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS tb_pontos_coletas CASCADE;
 DROP TABLE IF EXISTS tb_telefones CASCADE;
 DROP TABLE IF EXISTS tb_cooperativas CASCADE;
 DROP TABLE IF EXISTS tb_condominios CASCADE;
+DROP TABLE IF EXISTS tb_lkp_tipos_condominios CASCADE;
 DROP TABLE IF EXISTS tb_sindicos CASCADE;
 DROP TABLE IF EXISTS tb_usuarios CASCADE;
 DROP TABLE IF EXISTS tb_enderecos CASCADE;
@@ -44,12 +45,19 @@ CREATE TABLE tb_sindicos (
         REFERENCES tb_usuarios(id_usuario)
 );
 
+CREATE TABLE tb_lkp_tipos_condominios (
+    id_tipo_condominio INTEGER PRIMARY KEY,
+    nome_tipo VARCHAR(50) NOT NULL
+);
+
 CREATE TABLE tb_condominios (
     id_condominio INTEGER PRIMARY KEY,
     nome_condominio VARCHAR(255) NOT NULL,
     cnpj VARCHAR(18),
     codigo_acesso VARCHAR(20),
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
+    tipo_condominio_id INTEGER REFERENCES tb_lkp_tipos_condominios(id_tipo_condominio),
+    url_foto VARCHAR(500),
     sindico_id INTEGER REFERENCES tb_sindicos(id_sindico),
     endereco_id INTEGER UNIQUE REFERENCES tb_enderecos(id_endereco)
 );
@@ -143,12 +151,16 @@ INSERT INTO tb_sindicos VALUES
     (30, 3),
     (60, 6);
 
+INSERT INTO tb_lkp_tipos_condominios VALUES
+    (1, 'Residencial'),
+    (2, 'Comercial');
+
 INSERT INTO tb_condominios (
     id_condominio, nome_condominio, cnpj,
-    codigo_acesso, ativo, sindico_id, endereco_id
+    codigo_acesso, ativo, tipo_condominio_id, url_foto, sindico_id, endereco_id
 ) VALUES
-    (100, 'Condomínio Um', '11111111000111', 'COD100', TRUE, 30, 3),
-    (101, 'Condomínio Dois', '22222222000122', 'COD101', TRUE, 60, 6);
+    (100, 'Condomínio Um', '11111111000111', 'COD100', TRUE, 1, 'https://exemplo.com/foto-um.jpg', 30, 3),
+    (101, 'Condomínio Dois', '22222222000122', 'COD101', TRUE, 1, NULL, 60, 6);
 
 INSERT INTO tb_cooperativas (
     id_coop, cnpj_cooperativa, nome_cooperativa,

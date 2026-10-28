@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import br.com.ecociente.cadastro.core.Service.AtualizarUsuarioService;
+import br.com.ecociente.cadastro.core.domain.AtualizacaoCondominio;
 import br.com.ecociente.cadastro.core.domain.AtualizacaoDados;
 import br.com.ecociente.cadastro.core.domain.Endereco;
 import br.com.ecociente.cadastro.core.domain.UsuarioEdicao;
@@ -554,6 +555,150 @@ class AtualizarUsuarioServiceTest {
 
         nenhumaEscrita();
         verifyNoInteractions(cepGateway);
+    }
+
+    private AtualizacaoCondominio condominio(
+        String nome,
+        Integer tipoCondominioId,
+        String urlFoto
+    ) {
+        return new AtualizacaoCondominio(nome, tipoCondominioId, urlFoto);
+    }
+
+    private void nenhumaEscritaNoCondominio() {
+        verify(gateway, never()).atualizarCondominio(any(), any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Síndico", "SINDICO"})
+    void devePermitirSindicoResponsavelAtualizarOCondominio(String tipo) {
+        usuario(tipo, 10);
+
+        when(gateway.condominioAtivoDoSindico(1, 100)).thenReturn(true);
+        when(gateway.tipoCondominioExiste(2)).thenReturn(true);
+
+        service.atualizarCondominio(
+            1,
+            100,
+            condominio("  Residencial Eco  ", 2, "https://exemplo.com/foto.jpg")
+        );
+
+        ArgumentCaptor<AtualizacaoCondominio> captor =
+            ArgumentCaptor.forClass(AtualizacaoCondominio.class);
+
+        verify(gateway).atualizarCondominio(eq(100), captor.capture());
+
+        assertEquals("Residencial Eco", captor.getValue().nome());
+        assertEquals(2, captor.getValue().tipoCondominioId());
+        assertEquals(
+            "https://exemplo.com/foto.jpg",
+            captor.getValue().urlFoto()
+        );
+    }
+
+    @Test
+    void deveAtualizarSoOQueFoiInformadoNoCondominio() {
+        usuario("Síndico", 10);
+
+        when(gateway.condominioAtivoDoSindico(1, 100)).thenReturn(true);
+
+        service.atualizarCondominio(
+            1, 100, condominio("Novo nome", null, null)
+        );
+
+        verify(gateway).atualizarCondominio(
+            eq(100),
+            argThat(dados ->
+                "Novo nome".equals(dados.nome())
+                && dados.tipoCondominioId() == null
+                && dados.urlFoto() == null
+            )
+        );
+
+        verify(gateway, never()).tipoCondominioExiste(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "Usuário comum", "Morador", "Cooperativa", "Administrador"
+    })
+    void deveRejeitarNaoSindicoNoCondominio(String tipo) {
+        usuario(tipo, 10);
+
+        assertThrows(
+            AtualizacaoNaoPermitidaException.class,
+            () -> service.atualizarCondominio(
+                1, 100, condominio("Novo nome", null, null)
+            )
+        );
+
+        verify(gateway, never()).condominioAtivoDoSindico(any(), any());
+        nenhumaEscritaNoCondominio();
+    }
+
+    @Test
+    void deveRejeitarCondominioDeOutroSindicoOuInativo() {
+        usuario("Síndico", 10);
+
+        when(gateway.condominioAtivoDoSindico(1, 100)).thenReturn(false);
+
+        assertThrows(
+            AtualizacaoNaoPermitidaException.class,
+            () -> service.atualizarCondominio(
+                1, 100, condominio("Novo nome", null, null)
+            )
+        );
+
+        nenhumaEscritaNoCondominio();
+    }
+
+    @Test
+    void deveRejeitarUsuarioInexistenteNoCondominio() {
+        when(gateway.buscarUsuarioAtivo(1)).thenReturn(Optional.empty());
+
+        assertThrows(
+            AtualizacaoNaoPermitidaException.class,
+            () -> service.atualizarCondominio(
+                1, 100, condominio("Novo nome", null, null)
+            )
+        );
+
+        nenhumaEscritaNoCondominio();
+    }
+
+    @Test
+    void deveExigirPeloMenosUmCampoNoCondominio() {
+        usuario("Síndico", 10);
+
+        when(gateway.condominioAtivoDoSindico(1, 100)).thenReturn(true);
+
+        BusinessException erro = assertThrows(
+            BusinessException.class,
+            () -> service.atualizarCondominio(
+                1, 100, condominio(null, null, null)
+            )
+        );
+
+        assertEquals("EMPTY_UPDATE", erro.getCodigoErro());
+        nenhumaEscritaNoCondominio();
+    }
+
+    @Test
+    void deveRejeitarTipoDeCondominioInexistente() {
+        usuario("Síndico", 10);
+
+        when(gateway.condominioAtivoDoSindico(1, 100)).thenReturn(true);
+        when(gateway.tipoCondominioExiste(99)).thenReturn(false);
+
+        BusinessException erro = assertThrows(
+            BusinessException.class,
+            () -> service.atualizarCondominio(
+                1, 100, condominio("Novo nome", 99, null)
+            )
+        );
+
+        assertEquals("CONDOMINIUM_TYPE_NOT_FOUND", erro.getCodigoErro());
+        nenhumaEscritaNoCondominio();
     }
 
     @Test
