@@ -182,7 +182,7 @@ class CadastrarMoradorServiceTest {
       BusinessException ex = assertThrows(BusinessException.class,
           () -> service.executar(
               "Emanuelly Mendes", "emanuelly@gmail.com", "Senha@T3ste",
-              LocalDate.now().minusYears(17), "630.824.490-26", "COD123"));
+              LocalDate.now().minusYears(9), "630.824.490-26", "COD123"));
 
       assertEquals("VALIDATION_ERROR", ex.getCodigoErro());
       verify(usuarioGateway, never()).existePorEmail(anyString());

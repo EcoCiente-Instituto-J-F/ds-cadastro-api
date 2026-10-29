@@ -207,7 +207,7 @@ class CadastrarUsuarioComumServiceTest {
                             "Emanuelly Mendes",
                             "emanuelly@gmail.com",
                             "Senha@T3ste",
-                            LocalDate.now().minusYears(17),
+                            LocalDate.now().minusYears(9),
                             "630.824.490-26",
                             "05280130",
                             "41",
