@@ -57,4 +57,6 @@ public interface AtualizacaoUsuarioGateway {
         Integer condominioId,
         AtualizacaoCondominio dados
     );
+
+    void desativarUsuario(Integer usuarioId);
 }

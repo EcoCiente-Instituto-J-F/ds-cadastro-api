@@ -302,4 +302,9 @@ public class AtualizacaoUsuarioGatewayImpl
             condominioId
         );
     }
+
+    @Override
+    public void desativarUsuario(Integer usuarioId) {
+        jdbc.update("UPDATE tb_usuarios SET ativo = FALSE WHERE id_usuario = ?", usuarioId);
+    }
 }

@@ -292,4 +292,10 @@ public class AtualizarUsuarioService {
       String mensagem) {
     return new AtualizacaoNaoPermitidaException(mensagem);
   }
+
+  // Exclusão de conta: desativa o usuário (a ds-autenticacao-api recusa o login de quem está inativo).
+  @Transactional
+  public void desativar(Integer usuarioId) {
+    gateway.desativarUsuario(usuarioId);
+  }
 }

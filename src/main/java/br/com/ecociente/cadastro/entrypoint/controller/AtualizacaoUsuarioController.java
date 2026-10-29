@@ -2,6 +2,7 @@ package br.com.ecociente.cadastro.entrypoint.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -86,5 +87,12 @@ public class AtualizacaoUsuarioController {
 
     private Integer usuarioId(Authentication authentication) {
         return (Integer) authentication.getPrincipal();
+    }
+
+    @DeleteMapping("/api/usuarios/me")
+    public ResponseEntity<Void> excluirConta(Authentication authentication) {
+        service.desativar(usuarioId(authentication));
+
+        return ResponseEntity.noContent().build();
     }
 }
