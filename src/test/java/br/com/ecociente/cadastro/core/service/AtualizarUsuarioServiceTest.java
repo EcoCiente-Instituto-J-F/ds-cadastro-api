@@ -722,4 +722,11 @@ class AtualizarUsuarioServiceTest {
         assertSame(falha, recebido);
         nenhumaEscrita();
     }
+
+    @Test
+    void desativarChamaOGatewayComOUsuarioDoToken() {
+        service.desativar(7);
+
+        verify(gateway).desativarUsuario(7);
+    }
 }
