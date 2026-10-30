@@ -2,6 +2,7 @@ package br.com.ecociente.cadastro.dataprovaider.gateway;
 
 import java.util.Optional;
 
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import br.com.ecociente.cadastro.core.domain.Condominio;
@@ -20,17 +21,20 @@ public class CondominioGatewayImpl implements CondominioGateway{
   private final MoradorRepository moradorRepository;
   private final CondominioPersistenceMapper condominioPersistenceMapper;
   private final MoradorPersistenceMapper moradorPersistenceMapper;
+  private final JdbcTemplate jdbc;
 
   public CondominioGatewayImpl(
     CondominioRepository condominioRepository,
     MoradorRepository moradorRepository,
     CondominioPersistenceMapper condominioPersistenceMapper,
-    MoradorPersistenceMapper moradorPersistenceMapper
+    MoradorPersistenceMapper moradorPersistenceMapper,
+    JdbcTemplate jdbc
   ){
     this.condominioRepository = condominioRepository;
     this.moradorRepository = moradorRepository;
     this.condominioPersistenceMapper = condominioPersistenceMapper;
     this.moradorPersistenceMapper = moradorPersistenceMapper;
+    this.jdbc = jdbc;
   }
 
   @Override
@@ -42,6 +46,12 @@ public class CondominioGatewayImpl implements CondominioGateway{
   public Morador vincularMorador(Morador morador) {
     MoradorEntity entity = moradorPersistenceMapper.toEntity(morador);
     MoradorEntity salvar = moradorRepository.save(entity);
+
+    // A mobile-api só reconhece o morador com a linha em tb_moradores além do vínculo aprovado.
+    jdbc.update(
+      "INSERT INTO tb_moradores (condominio_id, usuario_id) VALUES (?, ?) ON CONFLICT (usuario_id) DO NOTHING",
+      salvar.getCondominioId(), salvar.getUsuarioId());
+
     return moradorPersistenceMapper.toDomain(salvar);
   }
 
